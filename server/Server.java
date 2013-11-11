@@ -1,10 +1,19 @@
 import java.util.*;
 import java.net.*;
+import java.util.concurrent.locks;
+
 public class Server extends Thread
 {
-    private int portnum = 7734;
-    private LinkedList<Client> clist;
+    private final int portnum = 7734;
+    private final LinkedList<ClientInfo> clist = new LinkedList<>();
+    private final ReentrantReadWriteLock rwl = new ReentrantReadWriteLock();
+    private final Lock r = rwl.readLock();
+    private final Lock w = rwl.writeLock();
 
+
+    public Server()
+    {
+    }
 
     @Override
     public void run()
@@ -15,7 +24,7 @@ public class Server extends Thread
         {
             while(listening)
             {
-                new ClientHandler(socket.accept()).start();
+                new ClientHandler(socket.accept(),clist,lock).start();
             }
 
         }catch(IOException ioe)
@@ -29,20 +38,4 @@ public class Server extends Thread
         s.start();
     }
 
-    /*
-     * Class to store client information: the host name, host port number, 
-     * and a hashmap that stores the RFC number and RFC title
-     */
-    public static class Client
-    {
-        private String hostName;
-        private int portnum;
-        private HashMap<Integer,String> rfclist;
-        public Client(String hostName, int portnum)
-        {
-            this.hostName = hostName;
-            this.portnum = portnum;
-            this.rfclist = new HashMap<>();
-        }
-    }
 }
